@@ -70,7 +70,7 @@ public class AiService {
         数组每个元素包含六个字段：
         - action: 测试动作描述，不能为空
         - target: 请求方法和路径，方法和路径都不能为空，设计用例时，方法按照我传给你的HTTP方法，不要自行改动
-        - parameter: get方法表示拼装了请求参数的路径，以问号开始，如?parameter=test，post时方法为空
+        - parameter: get方法表示拼装了请求参数的路径，必须是字符串,以问号开始，如?parameter=test，post时方法为空
         - contentType: post方法请求的content type，如application/json等，直接我提供给你的接口定义里取值，通常在接口定义的requestBody.content字段，不能随便修改，接口定义没有值才能设置为空；get方法时设置为空
         - requestBody: post方法请求的body，可以为空或不为空，不为空时必须是字符串类型，且必须要严格匹配contentType的设置，比如ContentType是application/json类型且请求体是JSON对象的话，请把它序列化成字符串再放入，例如"{\"name\":\"test\"}"，不要直接输出JSON对象；get方法时设置为空
         - expected: 期望结果，文本描述，不能为空，这个字段不需要包含status code的预期取值了

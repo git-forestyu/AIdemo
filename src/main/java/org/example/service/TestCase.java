@@ -55,7 +55,7 @@ public class TestCase {
         this.expectedStatus = expectedStatus;
     }
 
-    public SetupAction getSetup() {
+    public SetupAction getSetUp() {
         return setUp;
     }
 

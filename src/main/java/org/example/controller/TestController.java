@@ -21,7 +21,7 @@ public class TestController {
     @Autowired
     private ReportBuilder reportBuilder;
 
-   /*
+/*
     @GetMapping("/ai/chat")
     public String chat(@RequestParam String message) {
         // 简单调用
@@ -37,15 +37,15 @@ public class TestController {
 
     @PostMapping("/ai/generate-test")
     public String generateTest(@RequestBody String apiDescription) {
-        return aiService.generateTestCases(apiDescription);
+        return aiService.generateTestCasesJson(apiDescription);
     }
 
     @PostMapping(value = "/ai/generatetext-test", consumes = "text/plain")
     public String generateTestText(@RequestBody String apiDescription) {
-        return aiService.generateTestCases(apiDescription);
+        return aiService.generateTestCasesJson(apiDescription);
     }
-
 */
+
 
     @GetMapping("/ai/run-swagger/GetTestCaseWithAIhallucination")
     public String runSwaggerWithAIhallucination() {
@@ -89,21 +89,22 @@ public class TestController {
         for (int i = 0; i < endpoints.size(); i += BATCH_SIZE) {
             int end = Math.min(i + BATCH_SIZE, endpoints.size());
             List<ApiEndpoint> batch = endpoints.subList(i, end);
-            String description="";
+            StringBuilder description = new StringBuilder();
             for (ApiEndpoint ep : batch) {
                 // 把接口的原始 JSON + 路径和方法拼成一段描述
-                 description = "接口路径: " + ep.getPath()
-                        + "\nHTTP方法: " + ep.getMethod()
-                        + "\n接口定义: " + ep.getRawJson()
-                        + "\n请求体字段定义: " + ep.getSchemaJson();
+                description.append("接口路径: ").append(ep.getPath())
+                        .append("\nHTTP方法: ").append(ep.getMethod())
+                        .append("\n接口定义: ").append(ep.getRawJson())
+                        .append("\n请求体字段定义: ").append(ep.getSchemaJson())
+                        .append("\n\n");
 
 
             }
-            description += "以接口路径和方法为维度，分别生成两条用例，例如接口/test/有POST和GET方法的话，POST和GET都要生成两个用例，并且都包含一个正常用例和一个异常用例；如果是类似/api/users的GET方法，路径里不需要传任何pathvariable参数或requestparameter参数，则只需生成一条正常用例即可。\n" +
-                    "因本次使用的测试场景的post方法添加用户时，id是默认设置，所以对应requestBody中不需要包含id的值";
+            description.append("以接口路径和方法为维度，分别生成两条用例，例如接口/test/有POST和GET方法的话，POST和GET都要生成两个用例，并且都包含一个正常用例和一个异常用例；如果是类似/api/users的GET方法，路径里不需要传任何pathvariable参数或requestparameter参数，则只需生成一条正常用例即可。\n")
+                    .append("因本次使用的测试场景的post方法添加用户时，id是默认设置，所以对应requestBody中不需要包含id的值");
 
             //暂未ai加入超时判断
-            String json = aiService.generateTestCasesJson(description);
+            String json = aiService.generateTestCasesJson(String.valueOf(description));
 
 
             //jsonReport = jsonReport.append(json).append("\n");
@@ -112,17 +113,23 @@ public class TestController {
             Thread.sleep(500);
         }
         // 3. 校验
-        //List<TestCase> actualCases = testExecutor.validate(allCases);
+        ////是否生成AI hallucination的情况
+
 
         // 4. 执行
+        Boolean validatedTc;
         List<TestResult> results = new ArrayList<>();
         TestResult result;
-        int hallucinationCount = 0;
+
         for (TestCase tc : allCases) {
-            result = testExecutor.execute(tc);
-            if(Objects.equals(result.getActualResponse(), "AI hallucination"))
-                hallucinationCount ++;
-            results.add(result);
+            validatedTc = testExecutor.validateAIhallucination(tc);
+            if(!validatedTc)
+            {
+                results.add(new TestResult(tc, 0, false, "AI hallucination"));
+            } else{
+                result = testExecutor.executeAndVerifyAfter(tc);
+                results.add(result);
+            }
         }
 
         // 5. 出报告

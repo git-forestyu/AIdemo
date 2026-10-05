@@ -2,6 +2,7 @@ package org.example.controller;
 
 import jakarta.validation.Valid;
 import org.example.service.User;
+import org.example.service.UserNotFoundException;
 import org.example.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,11 @@ public class UserController {
 
     @GetMapping("/{id}")
     public User getById(@PathVariable Long id) {
-        return userService.getById(id);
+        User user = userService.getById(id);
+        if (user == null) {
+            throw new UserNotFoundException("用户不存在: id=" + id);
+        }
+        return user;
     }
 
     @GetMapping
