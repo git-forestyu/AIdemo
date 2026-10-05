@@ -1,6 +1,6 @@
-package org.example.service;
+package org.example.model;
 
-public class VerifyAfter {
+public class PostVerification {
     private String target;          // 验证请求，如 "GET /api/users/1"
     private int expectedStatus;     // 期望状态码，如 404
     private String response;

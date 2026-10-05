@@ -1,6 +1,6 @@
 package org.example.controller;
 
-import org.example.service.UserNotFoundException;
+import org.example.exception.UserNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;

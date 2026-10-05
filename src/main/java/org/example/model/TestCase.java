@@ -1,4 +1,4 @@
-package org.example.service;
+package org.example.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -11,12 +11,9 @@ public class TestCase {
     private String requestBody;
     private String contentType;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private SetupAction setUp;
+    private PreSetupAction setUp;
     @JsonInclude(JsonInclude.Include.NON_NULL) //为空是不进行解析和显示
-    private VerifyAfter verifyAfter;
-
-    public VerifyAfter getVerifyAfter() { return verifyAfter; }
-    public void setVerifyAfter(VerifyAfter verifyAfter) { this.verifyAfter = verifyAfter; }
+    private PostVerification postVerification;
 
 
     public String getAction() { return action; }
@@ -55,11 +52,19 @@ public class TestCase {
         this.expectedStatus = expectedStatus;
     }
 
-    public SetupAction getSetUp() {
+    public PreSetupAction getSetUp() {
         return setUp;
     }
 
-    public void setSetUp(SetupAction setUp) {
+    public void setSetUp(PreSetupAction setUp) {
         this.setUp = setUp;
+    }
+
+    public PostVerification getPostVerification() {
+        return postVerification;
+    }
+
+    public void setPostVerification(PostVerification postVerification) {
+        this.postVerification = postVerification;
     }
 }

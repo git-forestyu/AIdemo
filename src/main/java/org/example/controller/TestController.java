@@ -1,6 +1,9 @@
 
 package org.example.controller;
 
+import org.example.model.ApiEndpoint;
+import org.example.model.TestCase;
+import org.example.model.TestResult;
 import org.example.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -8,7 +11,6 @@ import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 
 @RestController
@@ -127,7 +129,7 @@ public class TestController {
             {
                 results.add(new TestResult(tc, 0, false, "AI hallucination"));
             } else{
-                result = testExecutor.executeAndVerifyAfter(tc);
+                result = testExecutor.executeAndPostVerificcation(tc);
                 results.add(result);
             }
         }

@@ -1,4 +1,4 @@
-package org.example.service;
+package org.example.model;
 
 public class TestResult {
     private TestCase testCase;

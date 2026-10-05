@@ -1,5 +1,7 @@
 package org.example.service;
 
+import org.example.exception.UserNotFoundException;
+import org.example.model.User;
 import org.springframework.stereotype.Service;
 
 import java.util.*;

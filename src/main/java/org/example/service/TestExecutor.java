@@ -1,5 +1,8 @@
 package org.example.service;
 
+import org.example.model.TestCase;
+import org.example.model.TestResult;
+import org.example.model.PostVerification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
@@ -14,7 +17,7 @@ public class TestExecutor {
     private final RestClient restClient = RestClient.create();
     private static final Logger log = LoggerFactory.getLogger(TestExecutor.class);
 
-    public TestResult executeAndVerifyAfter(TestCase tc) {
+    public TestResult executeAndPostVerificcation(TestCase tc) {
         int[] statusCode = new int[1];
         String[] body = new String[1];
 
@@ -30,28 +33,28 @@ public class TestExecutor {
             //response响应内容的判断，是否符合需求，如包含关键报错内容
             //如果test case是新增或者删除，则执行后还要加一个查询验证，是否真正增加了
 
-            VerifyAfter verifyAfter = tc.getVerifyAfter();
-            if (verifyAfter == null && statusCode[0]  == 200) {
-                verifyAfter = buildVerifyAfter(tc);   // Java 自动推导
+            PostVerification postVerification = tc.getPostVerification();
+            if (postVerification == null && statusCode[0]  == 200) {
+                postVerification = buildPostVerficiation(tc);   // Java 自动推导
             }
 
-            if (verifyAfter != null) {
+            if (postVerification != null) {
                 int[] verifyStatus = new int[1];
                 String[] verifyBody = new String[1];
 
-                sendRequest(verifyAfter.getTarget(), "", "", "",
+                sendRequest(postVerification.getTarget(), "", "", "",
                         verifyStatus, verifyBody);
 
                 //字符串比较，用equal
-                boolean verifyPassed = (verifyStatus[0] == verifyAfter.getExpectedStatus())
-                        && verifyBody[0].contains(verifyAfter.getResponse());
+                boolean verifyPassed = (verifyStatus[0] == postVerification.getExpectedStatus())
+                        && verifyBody[0].contains(postVerification.getResponse());
 
                 if (verifyPassed) {
-                    body[0] = body[0] + "\n[后置验证通过] " + verifyAfter.getTarget()
+                    body[0] = body[0] + "\n[后置验证通过] " + postVerification.getTarget()
                             + " 返回status " + verifyStatus[0] + " 和response:" + verifyBody[0]; //因删除后再查询为空，此处先写死返回空
                 } else {
                     passed = false;
-                    body[0] = body[0] + "\n[后置验证失败] 期望 " + verifyAfter.getExpectedStatus()
+                    body[0] = body[0] + "\n[后置验证失败] 期望 " + postVerification.getExpectedStatus()
                             + "，实际 " + verifyStatus[0]
                             + "，响应: " + verifyBody[0];
                 }
@@ -93,7 +96,7 @@ public class TestExecutor {
 
 
 
-    private VerifyAfter buildVerifyAfter(TestCase tc) {
+    private PostVerification buildPostVerficiation(TestCase tc) {
         String target = tc.getTarget();
 
         // 只对 DELETE 请求做后置验证
@@ -104,12 +107,12 @@ public class TestExecutor {
         // 把 DELETE 替换成 GET，路径不变
         String getTarget = "GET " + target.substring("DELETE ".length());
 
-        VerifyAfter va = new VerifyAfter();
+        PostVerification pv = new PostVerification();
         //删除后用一个get请求检查删除情况
-        va.setTarget(getTarget);
-        va.setExpectedStatus(404);   // 删除成功后，再查应返回404且查询响应值为空
-        va.setResponse("用户不存在");
-        return va;
+        pv.setTarget(getTarget);
+        pv.setExpectedStatus(404);   // 删除成功后，再查应返回404且查询响应值为空
+        pv.setResponse("用户不存在");
+        return pv;
     }
 
     private void sendRequest(String target, String parameter, String contentType,

@@ -1,8 +1,8 @@
 package org.example.controller;
 
 import jakarta.validation.Valid;
-import org.example.service.User;
-import org.example.service.UserNotFoundException;
+import org.example.model.User;
+import org.example.exception.UserNotFoundException;
 import org.example.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
