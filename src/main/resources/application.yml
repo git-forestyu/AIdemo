@@ -1,12 +1,12 @@
 spring:
   ai:
     openai:
-      # 从环境变量读取你的 API Key，更安全
+      # read your API key from an environment variable — safer
       api-key: ${DEEPSEEK_API_KEY}
-      # DeepSeek 的 OpenAI 兼容接口地址
+      # DeepSeek's OpenAI-compatible API base URL
       base-url: https://api.deepseek.com
       chat:
         options:
-          # 指定模型。deepseek-flash 性价比高，deepseek-v4-pro 能力更强
+          # Model selection. deepseek-flash is good value; deepseek-v4-pro is more capable
           model: deepseek-flash
-          # 你可以在调用时动态覆盖，这里给个默认值
+          # you can override this dynamically per call; this is just the default

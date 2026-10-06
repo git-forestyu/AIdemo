@@ -19,15 +19,15 @@ public class AiService {
 
     private final ChatClient chatClient;
 
-    // 构造函数注入 Spring Boot 自动配置好的 ChatClient
+    // Constructor injection of the ChatClient that Spring Boot auto-configures
     public AiService(ChatClient.Builder chatClientBuilder) {
         this.chatClient = chatClientBuilder.build();
     }
 
     /**
-     * 向 DeepSeek 发送消息并获取回复
-     * @param prompt 用户输入的问题或指令
-     * @return AI 返回的文本
+     * Send a message to DeepSeek and get the reply
+     * @param prompt the question or instruction entered by the user
+     * @param prompt the question or instruction entered by the user
      */
     public String ask(String prompt) {
         return chatClient.prompt()
@@ -37,13 +37,13 @@ public class AiService {
     }
 
     /**
-     * 带系统提示词的调用，可以约束 AI 的行为
-     * 非常适合自动化平台：让 AI 扮演“测试用例生成器”或“代码分析器”
+     * A call that carries a system prompt, which constrains the AI's behaviour
+     * A very good fit for an automation platform: let the AI play a "test case generator" or a "code analyser
      */
     public String askWithSystem(String systemPrompt, String userPrompt) {
         return chatClient.prompt()
-                .system(systemPrompt) // 设定 AI 的角色
-                .user(userPrompt)      // 用户的具体指令
+                .system(systemPrompt) // set the AI's role
+                .user(userPrompt)      // the user's concrete instruction
                 .call()
                 .content();
     }
@@ -51,33 +51,35 @@ public class AiService {
 
     public String generateTestCasesJsonWithAIhallucination(String apiDescription) {
         String systemPrompt = """
-        你是一个测试用例生成专家。
-        输入是一段接口描述，输出JSON数组。
-        数组每个元素包含六个字段：
-        - action: 测试动作描述
-        - target: 请求方法和路径
-        - parameter: 传入url中的查询请求参数
-        - contentType: 请求方法的content type
-        - requestBody: 请求的body
-        - expected: 期望结果
-        - expectedStatus: 期望状态
-       """;
+        You are a test case generation expert.
+        Input: a description of an API endpoint.
+        Output: a JSON array.
+        Each element in the array contains seven fields:
+        - action: description of the test action
+        - target: HTTP method and path
+        - parameter: query parameters passed in the URL
+        - contentType: content type of the request
+        - requestBody: request body
+        - expected: expected result
+        - expectedStatus: expected status code
+        """;
         return askWithSystem(systemPrompt, apiDescription);
     }
 
     public String generateTestCasesJson(String apiDescription) {
         String systemPrompt = """
-        你是一个测试用例生成专家。
-        输入是一段接口描述，输出必须是严格的 JSON 数组，不要包含任何解释文字。
-        数组每个元素包含六个字段：
-        - action: 测试动作描述，不能为空
-        - target: 请求方法和路径，方法和路径都不能为空，设计用例时，方法按照我传给你的HTTP方法，不要自行改动
-        - parameter: get方法表示拼装了请求参数的路径，必须是字符串。有查询参数时以问号开头，如 ?name=test。如果 get 请求没有查询参数，parameter 设为空字符串 ""；post 方法时为空。
-        - contentType: post方法请求的content type，如application/json等，直接我提供给你的接口定义里取值，通常在接口定义的requestBody.content字段，不能随便修改，接口定义没有值才能设置为空；get方法时设置为空
-        - requestBody: post方法请求的body，可以为空或不为空，不为空时必须是字符串类型，且必须要严格匹配contentType的设置，比如ContentType是application/json类型且请求体是JSON对象的话，请把它序列化成字符串再放入，例如"{\"name\":\"test\"}"，不要直接输出JSON对象；get方法时设置为空
-        - expected: 期望结果，文本描述，不能为空，这个字段不需要包含status code的预期取值了
-        - expectedStatus: 期望状态，如400,200等，不能为空
-        每条用例的 expected 必须是唯一确定的断言，不允许出现“或”“可能”“之一”这类模糊表述。如果不确定，就基于接口定义写最保守的断言。
+        You are a test case generation expert.
+        Input: a description of an API endpoint.
+        Output: a strict JSON array with no explanation text.
+        Each element in the array contains seven fields:
+        - action: description of the test action, must not be empty
+        - target: HTTP method and path, neither can be empty. Use the HTTP method I provide — do not change it.
+        - parameter: for GET, the path with query parameters appended, must be a string. If there are query parameters, start with a question mark, e.g. ?name=test. If the GET request has no query parameters, set parameter to an empty string "". For POST, leave it empty.
+        - contentType: for POST, the content type of the request, e.g. application/json. Take it directly from the endpoint definition I provide, usually from the requestBody.content field. Do not modify it. Set it to empty only if the endpoint definition has no value. For GET, leave it empty.
+        - requestBody: for POST, the request body. It can be empty or non-empty. If non-empty, it must be a string and must strictly match the contentType. For example, if contentType is application/json and the body is a JSON object, serialize it into a string, e.g. "{\\"name\\":\\"test\\"}", do not output a JSON object directly. For GET, leave it empty.
+        - expected: expected result, text description, must not be empty. This field does not need to include the expected status code.
+        - expectedStatus: expected status code, e.g. 400, 200, must not be empty.
+        Each test case's expected must be a single deterministic assertion. Do not use vague expressions like "or", "maybe", or "one of". If unsure, write the most conservative assertion based on the endpoint definition.
         """;
         return askWithSystem(systemPrompt, apiDescription);
     }
@@ -101,14 +103,14 @@ public class AiService {
             String path = entry.getKey();
             JsonNode pathItem = entry.getValue();
 
-            //调试代码，先只测对应的方法
+            //debug code: for now only test the matching method
           // if (!path.equals("/ai/run-test"))
             if (path.contains("/ai/"))
                 continue;
             if (path.startsWith("/v3/") || path.startsWith("/swagger") || path.startsWith("/actuator"))
                 continue;
 
-            // 一个路径下可能有多个方法（GET/POST）
+            // one path may carry several methods (GET/POST)
             Iterator<Map.Entry<String, JsonNode>> methods = pathItem.fields();
             while (methods.hasNext()) {
                 Map.Entry<String, JsonNode> methodEntry = methods.next();
@@ -118,7 +120,7 @@ public class AiService {
                 JsonNode schemaNode = methodNode.at("/requestBody/content/application~1json/schema");
                 String schemaJson = "";
 
-                //schemaNode.has只支持application/json，如果有 application/x-www-form-urlencoded 或 multipart/form-data，schema 会拿不到
+                //schemaNode.has only supports application/json; with application/x-www-form-urlencoded or multipart/form-data the schema cannot be retrieved
                 if (schemaNode.has("$ref")) {
                     String ref = schemaNode.get("$ref").asText();   // "#/components/schemas/User"
                     String schemaName = ref.substring(ref.lastIndexOf("/") + 1);  // "User"
@@ -132,7 +134,7 @@ public class AiService {
                 ApiEndpoint ep = new ApiEndpoint();
                 ep.setPath(path);
                 ep.setMethod(method);
-                ep.setRawJson(methodNode.toString());  // 把这个接口的原始 JSON 留着喂给 AI
+                ep.setRawJson(methodNode.toString());  // keep this endpoint's raw JSON around to feed to the AI
                 ep.setSchemaJson(schemaJson);
                 endpoints.add(ep);
             }

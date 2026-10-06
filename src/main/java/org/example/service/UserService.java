@@ -31,7 +31,7 @@ public class UserService {
     public String delete(Long id) {
         User removed = users.remove(id);
         if (removed == null) {
-            throw new UserNotFoundException("用户不存在: id=" + id);
+            throw new UserNotFoundException("The user doesn't exist: id=" + id);
         }
         return "deleted";
     }
@@ -39,7 +39,7 @@ public class UserService {
     public User update(Long id, User user) {
         User existing = users.get(id);
         if (existing == null) {
-            return null;   // 或者抛异常，看你想怎么处理
+            return null;   // or throw an exception — up to you how you want to handle it
         }
         if (user.getName() != null) {
             existing.setName(user.getName());

@@ -26,16 +26,16 @@ public class TestExecutor {
             sendRequest(tc.getTarget(), tc.getParameter(),
                     tc.getContentType(), tc.getRequestBody(), statusCode, body);
 
-            // 简单判断：响应非空且不包含错误关键词
+            // Simple check: the response is non-empty and contains no error keywords
             boolean passed =  (statusCode[0]==tc.getExpectedStatus()) ;
 
 
-            //response响应内容的判断，是否符合需求，如包含关键报错内容
-            //如果test case是新增或者删除，则执行后还要加一个查询验证，是否真正增加了
+            //Judge the response body: does it meet the requirement, e.g. does it contain key error content
+            //If the test case is a create or a delete, a follow-up query must also run afterwards to confirm it really was added or removed
 
             PostVerification postVerification = tc.getPostVerification();
             if (postVerification == null && statusCode[0]  == 200) {
-                postVerification = buildPostVerficiation(tc);   // Java 自动推导
+                postVerification = buildPostVerficiation(tc);   // Java infers the type automatically
             }
 
             if (postVerification != null) {
@@ -45,30 +45,30 @@ public class TestExecutor {
                 sendRequest(postVerification.getTarget(), "", "", "",
                         verifyStatus, verifyBody);
 
-                //字符串比较，用equal
+                //string comparison: use equals
                 boolean verifyPassed = (verifyStatus[0] == postVerification.getExpectedStatus())
                         && verifyBody[0].contains(postVerification.getResponse());
 
                 if (verifyPassed) {
-                    body[0] = body[0] + "\n[后置验证通过] " + postVerification.getTarget()
-                            + " 返回status " + verifyStatus[0] + " 和response:" + verifyBody[0]; //因删除后再查询为空，此处先写死返回空
+                    body[0] = body[0] + "\n[Post-verification passed] " + postVerification.getTarget()
+                            + " returned status " + verifyStatus[0] + " and response: " + verifyBody[0];
                 } else {
                     passed = false;
-                    body[0] = body[0] + "\n[后置验证失败] 期望 " + postVerification.getExpectedStatus()
-                            + "，实际 " + verifyStatus[0]
-                            + "，响应: " + verifyBody[0];
+                    body[0] = body[0] + "\n[Post-verification failed] Expected " + postVerification.getExpectedStatus()
+                            + ", actual " + verifyStatus[0]
+                            + ", response: " + verifyBody[0];
                 }
             }
 
             return new TestResult(tc, statusCode[0], passed, body[0]);
 
         } catch (Exception e) {
-            return new TestResult(tc, statusCode[0],false, "执行异常: " + e.getMessage());
+            return new TestResult(tc, statusCode[0],false, "Execute exception: " + e.getMessage());
         }
 
     }
 
-    //判断是否生成AI hallucination数据
+    //Determine whether this is AI-hallucination data
     public boolean validateAIhallucination(TestCase tc) {
         if (tc.getTarget() == null || tc.getTarget().isBlank()) {
             return false;
@@ -80,14 +80,14 @@ public class TestExecutor {
                 || target.startsWith("PUT ")
                 || target.startsWith("DELETE ")
                 || target.startsWith("PATCH ");
-        // 校验 1：target 不能为空，且必须包含 HTTP 方法
+        // Check 1: target must not be blank and must contain an HTTP method
         if (tc.getTarget() == null || tc.getTarget().isBlank() || !tc.getTarget().contains("/")) {
             return false;
         } else if(!hasValidMethod){
             return false;
         }
-        // 校验 2：expected 不能包含模糊词
-        else if (tc.getExpected().contains("或") || tc.getExpected().contains("可能")) {
+        // Check 2: expected must not contain vague wording
+        else if (tc.getExpected().contains("like") || tc.getExpected().contains("may")) {
             return false;
         } else {
             return true;
@@ -99,19 +99,19 @@ public class TestExecutor {
     private PostVerification buildPostVerficiation(TestCase tc) {
         String target = tc.getTarget();
 
-        // 只对 DELETE 请求做后置验证
+        //  only run post-verification for DELETE requests
         if (target == null || !target.startsWith("DELETE ")) {
             return null;
         }
 
-        // 把 DELETE 替换成 GET，路径不变
+        // Replace DELETE with GET, keeping the path unchanged
         String getTarget = "GET " + target.substring("DELETE ".length());
 
         PostVerification pv = new PostVerification();
-        //删除后用一个get请求检查删除情况
+        //after the delete, use one GET request to check the deletion
         pv.setTarget(getTarget);
-        pv.setExpectedStatus(404);   // 删除成功后，再查应返回404且查询响应值为空
-        pv.setResponse("用户不存在");
+        pv.setExpectedStatus(404);   // after a successful delete the follow-up query should return 404 with an empty response body
+        pv.setResponse("The user doesn't exist");
         return pv;
     }
 

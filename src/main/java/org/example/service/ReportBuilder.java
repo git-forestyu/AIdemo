@@ -24,14 +24,16 @@ public class ReportBuilder {
 
 
 
-        report.append("生成用例总数: ").append(allCases.size()).append("\n");
-        //report.append("通过校验: ").append(actualCases.size()).append("\n");
-        report.append("执行完成: ").append(results.size()).append("\n");
-
-        report.append("AI hallucination Count数量：").append(hallucinationCount).append("\n");
+        report.append("Total generated cases: ").append(allCases.size()).append("\n");
+        report.append("Executed: ").append(results.size()).append("\n");
+        report.append("AI hallucination count: ").append(hallucinationCount).append("\n");
 
         long passed = results.stream().filter(TestResult::isPassed).count();
-        report.append("通过: ").append(passed).append(" / ").append(results.size()).append("\n");
+        report.append("Passed: ").append(passed).append(" / ").append(results.size()).append("\n");
+
+       // Pass Rate
+        double passRate = results.isEmpty() ? 0 : (double) passed / results.size() * 100;
+        report.append("Pass rate: ").append(String.format("%.1f%%", passRate)).append("\n");
 
         int count=1;
         for (TestResult r : results) {
@@ -40,11 +42,11 @@ public class ReportBuilder {
                 tcJson = MAPPER.writerWithDefaultPrettyPrinter()
                         .writeValueAsString(r.getTestCase());
             } catch (JsonProcessingException e) {
-                tcJson = "序列化失败: " + e.getMessage();
+                tcJson = "Serialization failed: " + e.getMessage();
             }
-            report.append("#####测试用例").append(count).append(":\n").append(tcJson).append("\n");
-            report.append("测试结果：").append(r.isPassed() ? "[通过] " : "[失败] ").append("\n方法/路径：").append(r.getTestCase().getTarget()).append("\n测试点：")
-                    .append(r.getTestCase().getAction()).append(" \n预期返回：").append("\n").append("a. expected status code:").append(r.getTestCase().getExpectedStatus()).append("\n").append("b. expected response :").append(r.getTestCase().getExpected()).append("\n").append("实际返回：").append("\n").append("a. actual status code:").append(r.getStatusCode()).append("\nb. actual response:").append(r.getActualResponse()).append("\n\n");
+            report.append("#####Test Case ").append(count).append(":\n").append(tcJson).append("\n");
+            report.append("Test Result: ").append(r.isPassed() ? "[Passed] " : "[Failed] ").append("\nMethod/Path: ").append(r.getTestCase().getTarget()).append("\nTest Point: ")
+                    .append(r.getTestCase().getAction()).append("\nExpected Result:\n").append("a. expected status code: ").append(r.getTestCase().getExpectedStatus()).append("\n").append("b. expected response: ").append(r.getTestCase().getExpected()).append("\n").append("Actual Result:\n").append("a. actual status code: ").append(r.getStatusCode()).append("\nb. actual response: ").append(r.getActualResponse()).append("\n\n");
             count++;
         }
 

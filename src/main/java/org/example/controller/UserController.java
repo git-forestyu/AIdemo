@@ -25,7 +25,7 @@ public class UserController {
     public User getById(@PathVariable Long id) {
         User user = userService.getById(id);
         if (user == null) {
-            throw new UserNotFoundException("用户不存在: id=" + id);
+            throw new UserNotFoundException("The user doesn't exist: id=" + id);
         }
         return user;
     }

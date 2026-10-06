@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 
 public class User {
     private Long id;
-    @NotBlank(message = "name 不能为空")
-    @Schema(description = "用户名，不能为空", example = "张三")
+    @NotBlank(message = "Name must not be empty")
+    @Schema(description = "Username, must not be empty", example = "Forest")
     private String name;
     private Integer age;
 
@@ -33,5 +33,5 @@ public class User {
     public void setAge(Integer age) {
         this.age = age;
     }
-    // getter / setter 省略
+
 }

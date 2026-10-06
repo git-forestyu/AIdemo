@@ -12,7 +12,7 @@ public class TestCase {
     private String contentType;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private PreSetupAction setUp;
-    @JsonInclude(JsonInclude.Include.NON_NULL) //为空是不进行解析和显示
+    @JsonInclude(JsonInclude.Include.NON_NULL) //when null it is neither parsed nor displayed
     private PostVerification postVerification;
 
 

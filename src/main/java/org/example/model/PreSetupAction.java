@@ -1,6 +1,6 @@
 package org.example.model;
 
-//暂时不处理，用作后面删除前获取同地址下的方法先进行新增
+//Not handled for now. To be used later, before a delete, to fetch the methods under the same path so the create can run first
 public class PreSetupAction {
     private String target;          // "POST /api/users"
     private String contentType;     // "application/json"

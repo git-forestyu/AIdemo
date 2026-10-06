@@ -28,7 +28,7 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Spring AI：只保留一次声明，排除传递的 swagger -->
+        <!-- Spring AI: declare it only once here, and exclude the swagger dependency it pulls in transitively -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-openai</artifactId>
@@ -41,7 +41,7 @@
             </exclusions>
         </dependency>
 
-        <!-- springdoc：用 2.8.5，让 springdoc 自己管理 swagger 版本 -->
+        <!-- springdoc: use 2.8.5 and let springdoc manage the swagger version itself -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>

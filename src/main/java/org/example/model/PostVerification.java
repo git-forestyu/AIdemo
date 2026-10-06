@@ -1,8 +1,8 @@
 package org.example.model;
 
 public class PostVerification {
-    private String target;          // 验证请求，如 "GET /api/users/1"
-    private int expectedStatus;     // 期望状态码，如 404
+    private String target;          // verification request, e.g. "GET /api/users/1"
+    private int expectedStatus;     // expected status code, e.g. 404
     private String response;
 
     public String getTarget() {
@@ -29,5 +29,5 @@ public class PostVerification {
         this.response = response;
     }
 
-    // getter / setter 省略
+
 }

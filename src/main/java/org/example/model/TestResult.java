@@ -13,18 +13,18 @@ public class TestResult {
         this.actualResponse = actualResponse;
     }
 
-    public boolean isPassed() {          // ← 这个方法必须存在
+    public boolean isPassed() {
         return passed;
     }
 
-    public TestCase getTestCase() {      // ← 这个方法也必须存在
+    public TestCase getTestCase() {
         return testCase;
     }
 
     public void setActualResponse(String actualResponse) {
         this.actualResponse = actualResponse;
     }
-    public String getActualResponse() {  // ← 这个方法也必须存在
+    public String getActualResponse() {
         return actualResponse;
     }
 

@@ -38,5 +38,5 @@ public class ApiEndpoint {
         this.schemaJson = schemaJson;
     }
 
-    // getter / setter 省略
+
 }
