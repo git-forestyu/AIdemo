@@ -135,7 +135,7 @@ public class TestController {
             {
                 results.add(new TestResult(tc, 0, false, "AI hallucination"));
             } else{
-                result = testExecutor.executeAndPostVerificcation(tc);
+                result = testExecutor.executeAndPostVerification(tc);
                 results.add(result);
             }
         }

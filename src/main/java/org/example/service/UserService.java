@@ -39,7 +39,7 @@ public class UserService {
     public User update(Long id, User user) {
         User existing = users.get(id);
         if (existing == null) {
-            return null;   // or throw an exception — up to you how you want to handle it
+            throw new UserNotFoundException("The user doesn't exist: id=" + id);
         }
         if (user.getName() != null) {
             existing.setName(user.getName());

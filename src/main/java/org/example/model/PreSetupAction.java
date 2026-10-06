@@ -6,4 +6,13 @@ public class PreSetupAction {
     private String contentType;     // "application/json"
     private String requestBody;     // {"name":"test","age":25}
     private int expectedStatus;     // 200
+
+    public String getTarget() { return target; }
+    public void setTarget(String target) { this.target = target; }
+    public String getContentType() { return contentType; }
+    public void setContentType(String contentType) { this.contentType = contentType; }
+    public String getRequestBody() { return requestBody; }
+    public void setRequestBody(String requestBody) { this.requestBody = requestBody; }
+    public int getExpectedStatus() { return expectedStatus; }
+    public void setExpectedStatus(int expectedStatus) { this.expectedStatus = expectedStatus; }
 }
