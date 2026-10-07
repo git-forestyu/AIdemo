@@ -2,31 +2,57 @@ package org.example.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.model.HallucinationRecord;
+import org.example.model.HallucinationType;
 import org.example.model.TestCase;
 import org.example.model.TestResult;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class ReportBuilder {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    public String build(List<TestCase> allCases, List<TestResult> results) {
+    public String build(List<TestCase> allCases, List<TestResult> results, List<HallucinationRecord> hallucinations) {
 
         StringBuilder report = new StringBuilder();
-        int hallucinationCount = 0;
+        /*int hallucinationCount = 0;
         for (TestResult result : results) {
             if(Objects.equals(result.getActualResponse(), "AI hallucination"))
                 hallucinationCount ++;
+        }*/
+
+        report.append("AI Hallucination Analysis:\n");
+
+        if (hallucinations.isEmpty()) {
+            report.append("  No hallucinations detected.\n\n");
+        } else {
+            Map<HallucinationType, Long> stats = hallucinations.stream()
+                    .collect(Collectors.groupingBy(HallucinationRecord::getType, Collectors.counting()));
+
+            for (Map.Entry<HallucinationType, Long> entry : stats.entrySet()) {
+                report.append("  ").append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+            }
+            report.append("\n");
+
+            // 列出每条幻觉的具体原因
+            report.append("Hallucination Details:\n");
+            for (HallucinationRecord h : hallucinations) {
+                report.append("  - [").append(h.getType()).append("] ")
+                        .append(h.getReason()).append("\n");
+            }
+            report.append("\n");
         }
 
 
 
         report.append("Total generated cases: ").append(allCases.size()).append("\n");
         report.append("Executed: ").append(results.size()).append("\n");
-        report.append("AI hallucination count: ").append(hallucinationCount).append("\n");
+        //report.append("AI hallucination count: ").append(hallucinationCount).append("\n");
 
         long passed = results.stream().filter(TestResult::isPassed).count();
         report.append("Passed: ").append(passed).append(" / ").append(results.size()).append("\n");

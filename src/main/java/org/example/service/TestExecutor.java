@@ -1,9 +1,6 @@
 package org.example.service;
 
-import org.example.model.PreSetupAction;
-import org.example.model.TestCase;
-import org.example.model.TestResult;
-import org.example.model.PostVerification;
+import org.example.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
@@ -24,7 +21,7 @@ public class TestExecutor {
 
 
         try {
-            ///Execute pre-setup if necessary
+            //Execute pre-setup if necessary
             PreSetupAction preSetup = tc.getSetUp();
             if (preSetup == null) {
                 preSetup = buildPreSetup(tc);
@@ -33,10 +30,10 @@ public class TestExecutor {
             if (preSetup != null) {
                 int[] setupStatus = new int[1];
                 String[] setupBody = new String[1];
-
+                log.info("Executing pre-setup: {}", preSetup.getTarget());
                 sendRequest(preSetup.getTarget(), "", preSetup.getContentType(),
                         preSetup.getRequestBody(), setupStatus, setupBody);
-
+                log.info("Pre-setup result: status={}, body={}", setupStatus[0], setupBody[0]);
                 if (setupStatus[0] != preSetup.getExpectedStatus()) {
                     return new TestResult(tc, 0, false,
                             "Pre-setup failed: " + setupBody[0]);
@@ -90,9 +87,9 @@ public class TestExecutor {
     }
 
     //Determine whether this is AI-hallucination data
-    public boolean validateAIhallucination(TestCase tc) {
+    public HallucinationValidationResult validateAIhallucination(TestCase tc) {
         if (tc.getTarget() == null || tc.getTarget().isBlank()) {
-            return false;
+            return HallucinationValidationResult.invalid(HallucinationType.MISSING_TARGET, "target is empty");
         }
 
         String target = tc.getTarget().toUpperCase();
@@ -106,18 +103,16 @@ public class TestExecutor {
         boolean hasVagueWording = expected.matches(".*\\bor\\b.*")
                 || expected.matches(".*\\bmaybe\\b.*");
 
-        if (tc.getTarget() == null || tc.getTarget().isBlank() || !tc.getTarget().contains("/")) {
-            return false;
+       if (!tc.getTarget().contains("/")) {
+            return HallucinationValidationResult.invalid(HallucinationType.MISSING_PATH, "target does not contain a path");
         } else if(!hasValidMethod){
-            log.warn("AI hallucination: invalid method. target={}", tc.getTarget());
-            return false;
+            return HallucinationValidationResult.invalid(HallucinationType.INVALID_HTTP_METHOD, "invalid HTTP method: " + tc.getTarget());
         }
         // Check 2: expected must not contain vague wording
         else if (hasVagueWording) {
-            log.warn("AI hallucination: invalid expected. expected={}", tc.getExpected());
-            return false;
+            return HallucinationValidationResult.invalid(HallucinationType.VAGUE_ASSERTION, "vague assertion: " + tc.getExpected());
         } else {
-            return true;
+            return HallucinationValidationResult.valid();
         }
     }
 
@@ -129,6 +124,7 @@ public class TestExecutor {
         if (!target.startsWith("DELETE ")
                 && !target.startsWith("PUT ")
                 && !target.startsWith("GET ")) {
+            log.info("buildPreSetup: skipped for {}", target);
             return null;
         }
 
@@ -137,6 +133,7 @@ public class TestExecutor {
 
         //If the path does not end with a number or {id}, it is not an "operate-by-id" request, so no setup is needed.
         if (!path.matches(".*/\\d+$") && !path.matches(".*/\\{id\\}$")) {
+            log.info("buildPreSetup: skipped (not operate-by-id) for {}", target);
             return null;
         }
         String basePath = path.replaceAll("/\\d+$", "").replaceAll("/\\{id\\}$", "");
@@ -146,6 +143,7 @@ public class TestExecutor {
         setup.setContentType("application/json");
         setup.setRequestBody("{\"name\":\"setup-user\",\"age\":20}");
         setup.setExpectedStatus(200);
+        log.info("buildPreSetup: triggered for {}, setup target={}", target, setup.getTarget());
         return setup;
     }
 

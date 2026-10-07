@@ -4,8 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.controller.TestController;
 import org.example.model.ApiEndpoint;
 import org.example.model.TestCase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +21,7 @@ import java.util.Map;
 public class AiService {
 
     private final ChatClient chatClient;
+    private static final Logger log = LoggerFactory.getLogger(AiService.class);
 
     // Constructor injection of the ChatClient that Spring Boot auto-configures
     public AiService(ChatClient.Builder chatClientBuilder) {
@@ -88,7 +92,33 @@ public class AiService {
 
     public List<TestCase> parseToTestCases(String json) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(json, new TypeReference<List<TestCase>>() {});
+
+        JsonNode root = mapper.readTree(json);
+        List<TestCase> cases = new ArrayList<>();
+
+        for (JsonNode node : root) {
+            TestCase tc = new TestCase();
+            tc.setAction(node.path("action").asText());
+            tc.setTarget(node.path("target").asText());
+            tc.setParameter(node.path("parameter").asText(""));
+            tc.setContentType(node.path("contentType").asText(""));
+            tc.setExpected(node.path("expected").asText());
+            tc.setExpectedStatus(node.path("expectedStatus").asInt());
+
+            // requestBody Compatible with objects and strings
+            JsonNode rb = node.path("requestBody");
+            if (rb.isNull() || rb.isMissingNode()) {
+                tc.setRequestBody("");
+            } else if (rb.isTextual()) {
+                tc.setRequestBody(rb.asText());
+            } else {
+                tc.setRequestBody(mapper.writeValueAsString(rb));
+            }
+
+            cases.add(tc);
+        }
+        return cases;
+
     }
 
     public List<ApiEndpoint> parseSwaggerToEndpoint(String swaggerJson) throws Exception {
