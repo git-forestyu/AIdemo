@@ -115,8 +115,8 @@ public class TestController {
                            .append("If the endpoint is a GET like /api/users that requires no path variable or request parameter, generate only one normal case.\n")
                            .append("For the POST method in this test scenario, the id is set by default, so the requestBody should not include the id field.");
                    //no AI timeout check has been added yet
-                   //String json = aiService.generateTestCasesJson(String.valueOf(description));
-                   String json = aiService.generateTestCasesJsonWithAIhallucination(String.valueOf(description));
+                   String json = aiService.generateTestCasesJson(String.valueOf(description));
+                   //String json = aiService.generateTestCasesJsonWithAIhallucination(String.valueOf(description));
                    log.info("AI returned JSON: {}", json);
 
                    //jsonReport = jsonReport.append(json).append("\n");

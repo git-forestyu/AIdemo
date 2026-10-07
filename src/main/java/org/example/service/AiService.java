@@ -64,7 +64,7 @@ public class AiService {
         - parameter: query parameters passed in the URL
         - contentType: content type of the request
         - requestBody: request body
-        - expected: expected result
+        - expected: expected result, you have to add a "or" in the value, for example, name doesn't exist or id doesn't exist, I need to test or 
         - expectedStatus: expected status code
         """;
         return askWithSystem(systemPrompt, apiDescription);
@@ -139,7 +139,8 @@ public class AiService {
                 continue;
             if (path.startsWith("/v3/") || path.startsWith("/swagger") || path.startsWith("/actuator"))
                 continue;
-
+            if (path.contains("/api/users/reset"))
+                continue;
             // one path may carry several methods (GET/POST)
             Iterator<Map.Entry<String, JsonNode>> methods = pathItem.fields();
             while (methods.hasNext()) {

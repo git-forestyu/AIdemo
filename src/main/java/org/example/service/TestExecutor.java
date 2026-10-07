@@ -19,6 +19,7 @@ public class TestExecutor {
         int[] statusCode = new int[1];
         String[] body = new String[1];
 
+        sendRequest("POST /api/users/reset", "", "", "", new int[1], new String[1]);
 
         try {
             //Execute pre-setup if necessary

@@ -44,4 +44,10 @@ public class UserController {
     public User update(@PathVariable Long id,  @Valid @RequestBody User user) {
         return userService.update(id, user);
     }
+
+    @PostMapping("/reset")
+    public String reset() {
+        userService.reset();
+        return "reset";
+    }
 }

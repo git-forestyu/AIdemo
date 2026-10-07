@@ -50,4 +50,9 @@ public class UserService {
         users.put(id, existing);
         return existing;
     }
+
+    public void reset() {
+        users.clear();
+        idGen.set(1);
+    }
 }
