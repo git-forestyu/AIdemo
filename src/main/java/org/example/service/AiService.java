@@ -1,12 +1,11 @@
 package org.example.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.controller.TestController;
 import org.example.model.ApiEndpoint;
 import org.example.model.TestCase;
+import org.example.model.UiTestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -77,7 +76,7 @@ public class AiService {
         Output: a strict JSON array with no explanation text.
         Each element in the array contains seven fields:
         - action: description of the test action, must not be empty
-        - target: HTTP method and path, neither can be empty. Use the HTTP method I provide — do not change it.
+        - target: HTTP method and path, neither can be empty. Use the HTTP method I provide — do not change it. If the path contains a path variable like {id}, replace it with a real value, for example, GET /api/users/1, do not leave {id} in the target.
         - parameter: for GET, the path with query parameters appended, must be a string. If there are query parameters, start with a question mark, e.g. ?name=test. If the GET request has no query parameters, set parameter to an empty string "". For POST, leave it empty.
         - contentType: for POST, the content type of the request, e.g. application/json. Take it directly from the endpoint definition I provide, usually from the requestBody.content field. Do not modify it. Set it to empty only if the endpoint definition has no value. For GET, leave it empty.
         - requestBody: for POST, the request body. It can be empty or non-empty. If non-empty, it must be a string and must strictly match the contentType. For example, if contentType is application/json and the body is a JSON object, serialize it into a string, e.g. "{\\"name\\":\\"test\\"}", do not output a JSON object directly. For GET, leave it empty.
@@ -89,6 +88,20 @@ public class AiService {
     }
 
 
+    public String generateUiTestCasesJson(String pageDescription) {
+        String systemPrompt = """
+    You are a UI test case generation expert.
+    Input: a description of a web page.
+    Output: a strict JSON array with no explanation text.
+    Each element contains:
+    - action: "input username=test", "click loginBtn", or "assert url=/home"
+    - target: the page path, e.g. "/login"
+    - value: (unused for UI)
+    - expected: expected result
+    - expectedStatus: 200
+    """;
+        return askWithSystem(systemPrompt, pageDescription);
+    }
 
     public List<TestCase> parseToTestCases(String json) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
@@ -171,5 +184,22 @@ public class AiService {
             }
                     }
         return endpoints;
+    }
+
+    public List<UiTestCase> parseToUiTestCases(String json) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(json);
+        List<UiTestCase> cases = new ArrayList<>();
+
+        for (JsonNode node : root) {
+            UiTestCase tc = new UiTestCase();
+            tc.setAction(node.path("action").asText());
+            tc.setTarget(node.path("target").asText());
+            tc.setValue(node.path("value").asText(""));
+            tc.setExpected(node.path("expected").asText(""));
+            tc.setExpectedStatus(node.path("expectedStatus").asInt(200));
+            cases.add(tc);
+        }
+        return cases;
     }
 }

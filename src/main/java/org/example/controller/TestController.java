@@ -20,7 +20,9 @@ public class TestController {
     @Autowired
     private AiService aiService;
     @Autowired
-    private TestExecutor testExecutor;
+    private HttpExecutor httpExecutor;
+    @Autowired
+    private UiExecutor uiExecutor;
     @Autowired
     private ReportBuilder reportBuilder;
     private static final Logger log = LoggerFactory.getLogger(TestController.class);
@@ -140,12 +142,12 @@ public class TestController {
                List<HallucinationRecord> hallucinations = new ArrayList<>();
 
                for (TestCase tc : allCases) {
-                   HallucinationValidationResult vr = testExecutor.validateAIhallucination(tc);
+                   HallucinationValidationResult vr = httpExecutor.validateAIhallucination(tc);
                    if (!vr.isValid()) {
                        hallucinations.add(new HallucinationRecord(tc, vr.getType(), vr.getReason()));
                        results.add(new TestResult(tc, 0, false, "AI hallucination: " + vr.getReason()));
                    } else {
-                       result = testExecutor.executeAndPostVerification(tc);
+                       result = httpExecutor.executeAndPostVerification(tc);
                        results.add(result);
                    }
                }
@@ -161,5 +163,25 @@ public class TestController {
 
     }
 
+    @PostMapping("/ai/run-ui-test")
+    public String runUiTest(@RequestBody String pageDescription) throws Exception {
+        // 1. AI generate json test cases
+        String json = aiService.generateUiTestCasesJson(pageDescription);
+
+        // 2. parse
+        List<UiTestCase> cases = aiService.parseToUiTestCases(json);
+
+        // 3. execution
+        List<TestResult> results = uiExecutor.executeScenario(cases);
+
+
+
+        List<TestCase> allCases = new ArrayList<>();
+        for (TestResult r : results) {
+            allCases.add(r.getTestCase());
+        }
+
+        return reportBuilder.build(allCases, results, new ArrayList<>());
+    }
 
 }

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+<h1>Login</h1>
+
+<label>Username:</label>
+<input type="text" id="username" />
+<br/>
+
+<label>Password:</label>
+<input type="password" id="password" />
+<br/>
+
+<button id="loginBtn" onclick="login()">Login</button>
+
+<p id="message"></p>
+
+<script>
+    function login() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: username, password: password })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = "/home.html";
+                } else {
+                    document.getElementById("message").innerText = data.message;
+                }
+            });
+    }
+</script>
+</body>
+</html>
