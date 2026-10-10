@@ -82,9 +82,9 @@ public class UiExecutor implements TestExecutor {
                                 break;
 
                             case "assert":
-                                if ("url".equals(step.getTarget())) {
+                                if (step.getTarget().endsWith(".html")) {
                                     String currentUrl = driver.getCurrentUrl();
-                                    boolean ok = currentUrl.contains(step.getValue());
+                                    boolean ok = currentUrl.contains(step.getTarget());
                                     allResults.add(new TestResult(tc, ok ? 200 : 0, ok, currentUrl));
                                 } else {
                                     allResults.add(new TestResult(tc, 0, false, "Unknown assert target: " + step.getTarget()));

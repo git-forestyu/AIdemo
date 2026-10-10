@@ -70,7 +70,7 @@ public class ReportBuilder {
                 tcJson = "Serialization failed: " + e.getMessage();
             }
             report.append("#####Test Case ").append(count).append(":\n").append(tcJson).append("\n");
-            report.append("Test Result: ").append(r.isPassed() ? "[Passed] " : "[Failed] ").append("\nMethod/Path: ").append(r.getTestCase().getTarget()).append("\nTest Point: ")
+            report.append("Test Result: ").append(r.isPassed() ? "[Passed] " : "[Failed] ").append("\nTarget/Path: ").append(r.getTestCase().getTarget()).append("\nTest Point: ")
                     .append(r.getTestCase().getAction()).append("\nExpected Result:\n").append("a. expected status code: ").append(r.getTestCase().getExpectedStatus()).append("\n").append("b. expected response: ").append(r.getTestCase().getExpected()).append("\n").append("Actual Result:\n").append("a. actual status code: ").append(r.getStatusCode()).append("\nb. actual response: ").append(r.getActualResponse()).append("\n\n");
             count++;
         }

@@ -165,9 +165,12 @@ public class TestController {
 
     @PostMapping("/ai/run-ui-test")
     public String runUiTest(@RequestBody String pageDescription) throws Exception {
-        // 1. AI generate json scnearios
-        String json = aiService.generateUiScenariosJson(pageDescription);
 
+
+
+        // 1. AI generate json scenarios
+        String json = aiService.generateUiScenariosJson(pageDescription);
+        log.info("AI returned JSON: {}", json);
         // 2. parse
         List<UiScenario> scenarios = aiService.parseToUiScenarios(json);
 

@@ -1,8 +1,8 @@
 package org.example.model;
 
 public class UiStep {
-    private String action;   // "open", "input", "click", "assert"
-    private String target;   // "username", "loginBtn", "url"
+    private String action;   // "open", "input", "click", "assert"，
+    private String target;   // "username", "loginBtn", "url", "/login.html"
     private String value;    // "test", "/home.html"
 
     public String getAction() { return action; }

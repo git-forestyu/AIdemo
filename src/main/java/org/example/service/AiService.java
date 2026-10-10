@@ -85,7 +85,38 @@ public class AiService {
         return askWithSystem(systemPrompt, apiDescription);
     }
 
+    //    {
+//        "scenarios": [
+//        {
+//            "name": "Valid login",
+//                "steps": [
+//            {"action": "open", "target": "/login.html", "value": ""},
+//            {"action": "input", "target": "username", "value": "test"},
+//            {"action": "input", "target": "password", "value": "123456"},
+//            {"action": "click", "target": "loginBtn", "value": ""},
+//            {"action": "assert", "target": "/home.html", "value": ""}
+//      ]
+//        },
+//        {
+//            "name": "Invalid password",
+//                "steps": [
+//            {"action": "open", "target": "/login.html", "value": ""},
+//            {"action": "input", "target": "username", "value": "test"},
+//            {"action": "input", "target": "password", "value": "wrongpass"},
+//            {"action": "click", "target": "loginBtn", "value": ""},
+//            {"action": "assert", "target": "/login.html", "value": ""}
+//      ]
+//        }
+//  ]
+//    }
 
+    //pageDescription:
+//        Login page at /login.html with:
+//        - username input field (id=username)
+//                - password input field (id=password)
+//                - login button (id=loginBtn)
+//                - valid credentials: username=test, password=123456
+//        After successful login, redirect to /home.html.
     public String generateUiScenariosJson(String pageDescription) {
         String systemPrompt = """
     You are a UI test case generation expert.
@@ -192,22 +223,9 @@ public class AiService {
         return endpoints;
     }
 
-    public List<UiTestCase> parseToUiTestCases(String json) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(json);
-        List<UiTestCase> cases = new ArrayList<>();
 
-        for (JsonNode node : root) {
-            UiTestCase tc = new UiTestCase();
-            tc.setAction(node.path("action").asText());
-            tc.setTarget(node.path("target").asText());
-            tc.setValue(node.path("value").asText(""));
-            tc.setExpected(node.path("expected").asText(""));
-            tc.setExpectedStatus(node.path("expectedStatus").asInt(200));
-            cases.add(tc);
-        }
-        return cases;
-    }
+
+
     public List<UiScenario> parseToUiScenarios(String json) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(json);
