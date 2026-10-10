@@ -165,17 +165,17 @@ public class TestController {
 
     @PostMapping("/ai/run-ui-test")
     public String runUiTest(@RequestBody String pageDescription) throws Exception {
-        // 1. AI generate json test cases
-        String json = aiService.generateUiTestCasesJson(pageDescription);
+        // 1. AI generate json scnearios
+        String json = aiService.generateUiScenariosJson(pageDescription);
 
         // 2. parse
-        List<UiTestCase> cases = aiService.parseToUiTestCases(json);
+        List<UiScenario> scenarios = aiService.parseToUiScenarios(json);
 
         // 3. execution
-        List<TestResult> results = uiExecutor.executeScenario(cases);
+        List<TestResult> results = uiExecutor.executeScenarios(scenarios);
 
 
-
+        // 4. Get TestCase from results
         List<TestCase> allCases = new ArrayList<>();
         for (TestResult r : results) {
             allCases.add(r.getTestCase());

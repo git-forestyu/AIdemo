@@ -3,9 +3,7 @@ package org.example.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.model.ApiEndpoint;
-import org.example.model.TestCase;
-import org.example.model.UiTestCase;
+import org.example.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -88,17 +86,25 @@ public class AiService {
     }
 
 
-    public String generateUiTestCasesJson(String pageDescription) {
+    public String generateUiScenariosJson(String pageDescription) {
         String systemPrompt = """
     You are a UI test case generation expert.
     Input: a description of a web page.
-    Output: a strict JSON array with no explanation text.
-    Each element contains:
-    - action: "input username=test", "click loginBtn", or "assert url=/home"
-    - target: the page path, e.g. "/login"
-    - value: (unused for UI)
-    - expected: expected result
-    - expectedStatus: 200
+    Output: a strict JSON object with no explanation text.
+
+    The object contains a "scenarios" array. Each scenario has:
+    - name: scenario name, e.g. "Valid login" or "Invalid password"
+    - steps: an ordered array of steps. Each step contains:
+      - action: "open", "input", "click", or "assert"
+      - target: the element id or URL
+      - value: the value to input or the expected value
+
+    Generate at least two scenarios:
+    1. A normal scenario (valid credentials, expects redirect to /home.html)
+    2. An exception scenario (invalid credentials, expects to stay on /login.html)
+
+    Steps must be in the order a user would perform them:
+    open the page, input fields, click the button, then assert the result.
     """;
         return askWithSystem(systemPrompt, pageDescription);
     }
@@ -202,4 +208,28 @@ public class AiService {
         }
         return cases;
     }
+    public List<UiScenario> parseToUiScenarios(String json) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(json);
+        JsonNode scenariosNode = root.path("scenarios");
+
+        List<UiScenario> scenarios = new ArrayList<>();
+        for (JsonNode scenarioNode : scenariosNode) {
+            UiScenario scenario = new UiScenario();
+            scenario.setName(scenarioNode.path("name").asText());
+
+            List<UiStep> steps = new ArrayList<>();
+            for (JsonNode stepNode : scenarioNode.path("steps")) {
+                UiStep step = new UiStep();
+                step.setAction(stepNode.path("action").asText());
+                step.setTarget(stepNode.path("target").asText());
+                step.setValue(stepNode.path("value").asText(""));
+                steps.add(step);
+            }
+            scenario.setSteps(steps);
+            scenarios.add(scenario);
+        }
+        return scenarios;
+    }
+
 }

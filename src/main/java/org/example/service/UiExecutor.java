@@ -1,9 +1,6 @@
 package org.example.service;
 
-import org.example.model.HallucinationValidationResult;
-import org.example.model.TestCase;
-import org.example.model.TestResult;
-import org.example.model.UiTestCase;
+import org.example.model.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -55,59 +52,60 @@ public class UiExecutor implements TestExecutor {
         }
     }
 
-    public List<TestResult> executeScenario(List<UiTestCase> cases) {
-        WebDriver driver = new ChromeDriver();
-        List<TestResult> results = new ArrayList<>();
+    public List<TestResult> executeScenarios(List<UiScenario> scenarios) {
+        List<TestResult> allResults = new ArrayList<>();
 
-        try {
-            // 打开页面（假设所有用例的 target 是同一个页面）
-            driver.get("http://localhost:8080/login.html");
+        for (UiScenario scenario : scenarios) {
+            WebDriver driver = new ChromeDriver();
+            try {
+                for (UiStep step : scenario.getSteps()) {
+                    TestCase tc = toTestCase(scenario, step);
 
-            for (UiTestCase tc : cases) {
-                // 执行 action
-                try {
-                    if (tc.getAction().startsWith("input")) {
-                        String[] parts = tc.getAction().split(" ");
-                        String[] kv = parts[1].split("=");
+                    try {
+                        switch (step.getAction()) {
+                            case "open":
+                                driver.get("http://localhost:8080" + step.getTarget());
+                                allResults.add(new TestResult(tc, 200, true, "opened " + step.getTarget()));
+                                break;
 
-                        String fieldId = kv[0];
-                        String value = kv[1];
+                            case "input":
+                                driver.findElement(By.id(step.getTarget())).sendKeys(step.getValue());
+                                String actualValue = driver.findElement(By.id(step.getTarget())).getAttribute("value");
+                                boolean inputOk = step.getValue().equals(actualValue);
+                                allResults.add(new TestResult(tc, inputOk ? 200 : 0, inputOk,
+                                        "expected: " + step.getValue() + ", actual: " + actualValue));
+                                break;
 
-                        driver.findElement(By.id(fieldId)).sendKeys(value);
-                        // Validation for the input
-                        String actualValue = driver.findElement(By.id(fieldId)).getAttribute("value");
-                        boolean passed = value.equals(actualValue);
-                        results.add(new TestResult(toTestCase(tc), passed ? 200 : 0, passed,
-                                "expected value: " + value + ", actual value: " + actualValue));
-                        Thread.sleep(1000);
-                    } else if (tc.getAction().startsWith("click")) {
-                        String elementId = tc.getAction().split(" ")[1];
-                        driver.findElement(By.id(elementId)).click();
-                        Thread.sleep(1000);
-                        results.add(new TestResult(toTestCase(tc), 200, true, "click passed"));
-                    } else if (tc.getAction().startsWith("assert")) {
-                        String[] parts = tc.getAction().split(" ");
-                        String[] kv = parts[1].split("=");
-                        Thread.sleep(1000);
-                        if ("url".equals(kv[0])) {
-                            boolean ok = driver.getCurrentUrl().contains(kv[1]);
-                            results.add(new TestResult(toTestCase(tc), ok ? 200 : 0, ok, driver.getCurrentUrl()));
-                        } else {
-                            results.add(new TestResult(toTestCase(tc), 0, false, "Unknown assert target"));
+                            case "click":
+                                driver.findElement(By.id(step.getTarget())).click();
+                                allResults.add(new TestResult(tc, 200, true, "clicked " + step.getTarget()));
+                                break;
+
+                            case "assert":
+                                if ("url".equals(step.getTarget())) {
+                                    String currentUrl = driver.getCurrentUrl();
+                                    boolean ok = currentUrl.contains(step.getValue());
+                                    allResults.add(new TestResult(tc, ok ? 200 : 0, ok, currentUrl));
+                                } else {
+                                    allResults.add(new TestResult(tc, 0, false, "Unknown assert target: " + step.getTarget()));
+                                }
+                                break;
+
+                            default:
+                                allResults.add(new TestResult(tc, 0, false, "Unknown action: " + step.getAction()));
                         }
+                        Thread.sleep(1000);
+                    } catch (Exception e) {
+                        log.error("Step failed: {}", step.getAction(), e);
+                        allResults.add(new TestResult(tc, 0, false, e.getMessage()));
                     }
                 }
-                catch(Exception e) {
-                    log.error("Failed to execute action: {}", tc.getAction(), e);
-                    results.add(new TestResult(toTestCase(tc), 0, false, e.getMessage()));
-                }
+            } finally {
+                driver.quit();
             }
         }
-        finally {
-            driver.quit();
-        }
 
-        return results;
+        return allResults;
     }
 
     @Override
@@ -116,12 +114,12 @@ public class UiExecutor implements TestExecutor {
         return HallucinationValidationResult.valid();
     }
 
-    public TestCase toTestCase(UiTestCase uiTc) {
+    private TestCase toTestCase(UiScenario scenario, UiStep step) {
         TestCase tc = new TestCase();
-        tc.setAction(uiTc.getAction());
-        tc.setTarget(uiTc.getTarget());
-        tc.setExpected(uiTc.getExpected());
-        tc.setExpectedStatus(uiTc.getExpectedStatus());
+        tc.setAction(scenario.getName() + " | " + step.getAction());
+        tc.setTarget(step.getTarget());
+        tc.setExpected(step.getValue());
+        tc.setExpectedStatus(200);
         return tc;
     }
 }
